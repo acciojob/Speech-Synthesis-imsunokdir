@@ -29,14 +29,64 @@
     </div>
 
 <script>
+	const synth = window.speechSynthesis;
   const msg = new SpeechSynthesisUtterance();
   let voices = [];
   const voicesDropdown = document.querySelector('[name="voice"]');
   const options = document.querySelectorAll('[type="range"], [name="text"]');
   const speakButton = document.querySelector('#speak');
   const stopButton = document.querySelector('#stop');
-
+console.log(options)
   //Your code goes here
+	function loadVoices() {
+		const synth = window.speechSynthesis;
+		return new Promise((resolve) => {
+			synth.onvoiceschanged = function() {
+			voices = synth.getVoices();
+			resolve(voices);
+		};
+	});
+}
+let allVoices;
+loadVoices().then(voices => {
+  console.log("voices", voices);
+	voices.forEach((langs,i)=>{
+		let newOption=document.createElement("option");
+		newOption.value=langs.voiceURI;
+		newOption.textContent=langs.name;
+		voicesDropdown.appendChild(newOption)
+	}) 
+	allVoices =voices.slice();
+	console.log("voices",voices)
+});
+
+function speak() {
+	if (synth.speaking) {
+		synth.cancel();
+	}
+	let selectedVoice = Array.from(voicesDropdown);
+	let voiceRate = options[0].value;
+	let voicePitch = options[1].value;
+	let voiceText = options[2].value;
+	const utterThis = new SpeechSynthesisUtterance(voiceText);
+	utterThis.addEventListener("error", () => {
+		console.error("SpeechSynthesisUtterance error");
+	});
+	let selectedVoiceValue
+	selectedVoice.forEach((item,i)=>{
+		if(item.selected==true){
+			utterThis.voice = allVoices[i]
+		}
+	})
+	utterThis.rate = voiceRate;
+	utterThis.pitch = voicePitch;
+	synth.speak(utterThis);
+}
+
+	speakButton.addEventListener('click',speak)
+	stopButton.addEventListener('click',()=>{
+		synth.cancel()
+	})
 </script>
 
 </body>
